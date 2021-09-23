@@ -47,7 +47,7 @@ const exerciseSchema = new Schema(
 let Exercise = mongoose.model("Exercise", exerciseSchema);
 
 app.post("/api/users/:_id/exercises",
-  (req, res, next) => {
+  (req, res) => {
     let exedate = "";
     if (req.body.date == "") {
       let dateObj = new Date();
@@ -103,72 +103,26 @@ app.post("/api/users/:_id/exercises",
         description: req.body.description,
         duration: req.body.duration,
         date: exedate,
-        userId: req.body._id,
+        userId: req.body[":_id"],
       });
     exe.save();
-    next();
-  }, (req, res) => {
-    Person.findById(req.body._id, (err, person) => {
+    Person.find({}, function (err, data) {
       if (err) return console.log(err);
-      let exedate = "";
-      if (req.body.date == "") {
-        let dateObj = new Date();
-        let monStr = "";
-        if (dateObj.getMonth() == 0) {
-          monStr = "Jan";
-        } else if (dateObj.getMonth() == 1) {
-          monStr = "Feb";
-        } else if (dateObj.getMonth() == 2) {
-          monStr = "Mar";
-        } else if (dateObj.getMonth() == 3) {
-          monStr = "Apr";
-        } else if (dateObj.getMonth() == 4) {
-          monStr = "May";
-        } else if (dateObj.getMonth() == 5) {
-          monStr = "Jun";
-        } else if (dateObj.getMonth() == 6) {
-          monStr = "Jul";
-        } else if (dateObj.getMonth() == 7) {
-          monStr = "Aug";
-        } else if (dateObj.getMonth() == 8) {
-          monStr = "Sep";
-        } else if (dateObj.getMonth() == 9) {
-          monStr = "Oct";
-        } else if (dateObj.getMonth() == 10) {
-          monStr = "Nov";
-        } else {
-          monStr = "Dec";
-        };
-        let weekStr = "";
-        if (dateObj.getDay() == 0) {
-          weekStr = "Sun";
-        } else if (dateObj.getDay() == 1) {
-          weekStr = "Mon";
-        } else if (dateObj.getDay() == 2) {
-          weekStr = "Tue";
-        } else if (dateObj.getDay() == 3) {
-          weekStr = "Wed";
-        } else if (dateObj.getDay() == 4) {
-          weekStr = "Thu";
-        } else if (dateObj.getDay() == 5) {
-          weekStr = "Fri";
-        } else if (dateObj.getDay() == 6) {
-          weekStr = "Sat";
+      data.forEach(item => {
+        if (item._id == req.body._id) {
+          personname = item.name;
+          res.json({
+            username: personname,
+            description: req.body.description,
+            duration: parseInt(req.body.duration),
+            date: exedate,
+            _id: req.body._id
+          })
+          return null;
         }
-        exedate = weekStr + " " + monStr + " " + dateObj.getDate().toString() + " " + dateObj.getFullYear().toString();
-      } else {
-        exedate = new Date(req.body.date);
-        exedate = exedate.toString().substring(0, 15);
-      }
-      res.json({
-        username: person.name,
-        description: req.body.description,
-        duration: parseInt(req.body.duration),
-        date: exedate,
-        _id: req.body._id
       })
     });
-  })
+  });
 
 app.get("/api/users", (req, res) => {
   Person.find({}, function (err, docs) {
